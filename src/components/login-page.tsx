@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, User, Lock, Key } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export function LoginPage() {
   const [formData, setFormData] = useState({
@@ -11,9 +12,30 @@ export function LoginPage() {
     password: "",
     code: "",
   });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (formData.id !== "admin" || formData.password !== "admin123" || formData.code !== "admin") {
+      setError("아이디, 비밀번호 또는 코드가 올바르지 않습니다.");
+      return;
+    }
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        id: formData.id,
+        name: "관리자",
+      })
+    );
+    navigate("/dashboard");
   };
 
   return (
@@ -32,7 +54,7 @@ export function LoginPage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="id" className="text-white/90 font-medium">
                 아이디
@@ -83,14 +105,24 @@ export function LoginPage() {
                 />
               </div>
             </div>
-          </div>
 
-          <Button
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-            size="lg"
-          >
-            로그인하기
-          </Button>
+            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+            <Button
+              type="submit"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              size="lg"
+            >
+              로그인하기
+            </Button>
+
+            <div className="text-white/70 text-sm text-center space-y-1">
+              <p>테스트 계정 정보</p>
+              <p>아이디: admin</p>
+              <p>비밀번호: admin123</p>
+              <p>코드: admin</p>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
