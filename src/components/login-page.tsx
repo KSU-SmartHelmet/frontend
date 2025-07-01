@@ -3,14 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Lock, Key } from "lucide-react";
+import { Shield, User, Lock,  } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export function LoginPage() {
+  const env = {
+    SERVER_URL: import.meta.env.VITE_SERVER_URL,
+  };
+
   const [formData, setFormData] = useState({
     id: "",
     password: "",
-    code: "",
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -23,19 +26,43 @@ export function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (formData.id !== "admin" || formData.password !== "admin123" || formData.code !== "admin") {
-      setError("아이디, 비밀번호 또는 코드가 올바르지 않습니다.");
+    // TODO: 개발용 계정 (배포시 삭제)
+    if (formData.id === "admin" && formData.password === "admin123") {
+      navigate("/dashboard");
+    }
+
+    if (!formData.id) {
+      setError("아이디를 입력해 주세요.");
+      return;
+    }
+    if (!formData.password) {
+      setError("비밀번호를 입력해 주세요.");
       return;
     }
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: formData.id,
-        name: "관리자",
-      })
-    );
-    navigate("/dashboard");
+    fetch(`${env.SERVER_URL}/api/signin`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "userId": formData.id,
+        "password": formData.password,
+      }),
+    })
+        .then(res => {
+          if (!res.ok)
+            throw new Error(res.statusText);
+          return res.json();
+        })
+        .then(res => {
+          localStorage.setItem("accessToken", res.data);
+          navigate("/dashboard");
+        })
+        .catch(err => {
+          setError("아이디 혹은 비밀번호가 올바르지 않습니다.");
+          console.error(err);
+        })
   };
 
   return (
@@ -89,23 +116,6 @@ export function LoginPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="code" className="text-white/90 font-medium">
-                코드
-              </Label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60" />
-                <Input
-                  id="code"
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) => handleInputChange("code", e.target.value)}
-                  className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/50 focus:ring-white/20"
-                  placeholder="인증 코드를 입력하세요"
-                />
-              </div>
-            </div>
-
             {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
             <Button
@@ -116,11 +126,11 @@ export function LoginPage() {
               로그인하기
             </Button>
 
+            {/*TODO: 배포 시 삭제 (개발용)*/}
             <div className="text-white/70 text-sm text-center space-y-1">
               <p>테스트 계정 정보</p>
               <p>아이디: admin</p>
               <p>비밀번호: admin123</p>
-              <p>코드: admin</p>
             </div>
           </form>
         </CardContent>
