@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, User, Lock,  } from "lucide-react";
+import { Shield, User, Lock } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export function LoginPage() {
@@ -29,6 +29,7 @@ export function LoginPage() {
     // TODO: 개발용 계정 (배포시 삭제)
     if (formData.id === "admin" && formData.password === "admin123") {
       navigate("/dashboard");
+      return;
     }
 
     if (!formData.id) {
@@ -40,7 +41,7 @@ export function LoginPage() {
       return;
     }
 
-    fetch(`${env.SERVER_URL}/api/signin`, {
+    fetch(`${env.SERVER_URL}/signin`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
