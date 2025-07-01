@@ -35,7 +35,7 @@ export default function Header({ onLogout }: HeaderProps) {
                 <HardHat className="w-6 h-6 text-white" />
               </div>
               <div>
-                <Link to="/">
+                <Link to="/dashboard">
                   <h1 className="text-xl font-bold text-gray-900">스마트 안전모 관리시스템</h1>
                 </Link>
               </div>
