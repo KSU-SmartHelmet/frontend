@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import sampleDevices from "@/sample/sampleDevices";
+import devices from "@/sample/Devices.ts";
 import { Shield } from "lucide-react";
 
 export default function DashBoardTable() {
@@ -17,8 +17,8 @@ export default function DashBoardTable() {
     }
   };
 
-  const getPowerStatusIcon = (status: string) => {
-    return status === "온라인" ? (
+  const getPowerStatusIcon = (status: boolean) => {
+    return status ? (
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
         <span className="text-emerald-700">{status}</span>
@@ -31,8 +31,8 @@ export default function DashBoardTable() {
     );
   };
 
-  const getWearStatusBadge = (status: string) => {
-    return status === "착용중" ? (
+  const getWearStatusBadge = (status: boolean) => {
+    return status ? (
       <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">착용중</Badge>
     ) : (
       <Badge variant="secondary">미착용</Badge>
@@ -54,7 +54,7 @@ export default function DashBoardTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sampleDevices.length === 0 ? (
+            {devices.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12">
                   <div className="flex flex-col items-center gap-3">
@@ -69,7 +69,7 @@ export default function DashBoardTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              sampleDevices.map((device, index) => (
+              devices.map((device, index) => (
                 <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
                   <TableCell className="font-medium py-4">{device.deviceName}</TableCell>
                   <TableCell className="py-4">{getPowerStatusIcon(device.powerStatus)}</TableCell>
