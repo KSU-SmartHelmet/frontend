@@ -4,6 +4,69 @@ import DashBoardMainContent from "./DashBoardMainContent";
 import {useEffect, useState} from "react";
 import {MapView} from "@/components/map-view.tsx";
 
+export type DeviceStatus = "정상" | "점검필요" | "비상";
+export type PowerStatus = "온라인" | "오프라인";
+export type WearStatus = "착용중" | "미착용";
+
+export interface Device {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  status: DeviceStatus;
+  powerStatus: PowerStatus;
+  wearStatus: WearStatus;
+  lastUpdate: string;
+}
+
+export interface BodyProps {
+  device: Device[];
+}
+
+const sampleDevices: Device[] = [
+  {
+    id: "AICT-001",
+    name: "AICT-001",
+    lat: 37.5665,
+    lng: 126.978,
+    status: "정상",
+    powerStatus: "온라인",
+    wearStatus: "착용중",
+    lastUpdate: "2024-01-15 14:30:25",
+  },
+  {
+    id: "AICT-002",
+    name: "AICT-002",
+    lat: 37.5651,
+    lng: 126.9895,
+    status: "점검필요",
+    powerStatus: "오프라인",
+    wearStatus: "미착용",
+    lastUpdate: "2024-01-15 12:15:10",
+  },
+  {
+    id: "AICT-003",
+    name: "AICT-003",
+    lat: 37.5707,
+    lng: 126.9772,
+    status: "정상",
+    powerStatus: "온라인",
+    wearStatus: "착용중",
+    lastUpdate: "2024-01-15 14:28:15",
+  },
+  {
+    id: "AICT-004",
+    name: "AICT-004",
+    lat: 37.5689,
+    lng: 126.9831,
+    status: "비상",
+    powerStatus: "온라인",
+    wearStatus: "착용중",
+    lastUpdate: "2024-01-15 14:35:12",
+  },
+];
+
+
 export function DashboardPage() {
   const env = {
     SERVER_URL: import.meta.env.VITE_SERVER_URL,
@@ -41,8 +104,8 @@ export function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <Header userName={userName} isMapView={isMapView} setIsMapView={setIsMapView} />
       { isMapView ?
-        <MapView />
-        : <DashBoardMainContent />
+        <MapView device={sampleDevices} />
+        : <DashBoardMainContent device={sampleDevices} />
       }
     </div>
   );

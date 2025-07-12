@@ -1,25 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Header from "@/page/Header";
 import { Filter } from "lucide-react";
 import { useState, useCallback } from "react";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
-
-// 타입 정의
-type DeviceStatus = "정상" | "점검필요" | "비상";
-type PowerStatus = "온라인" | "오프라인";
-type WearStatus = "착용중" | "미착용";
-
-interface Device {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  status: DeviceStatus;
-  powerStatus: PowerStatus;
-  wearStatus: WearStatus;
-  lastUpdate: string;
-}
+import { type Device, type DeviceStatus, type BodyProps } from "@/page/DashBoard/dashboard-page";
 
 interface Filters {
   정상: boolean;
@@ -31,50 +15,6 @@ interface Filters {
   미착용: boolean;
 }
 
-// 샘플 기기 위치 데이터
-const deviceLocations: Device[] = [
-  {
-    id: "AICT-001",
-    name: "AICT-001",
-    lat: 37.5665,
-    lng: 126.978,
-    status: "정상",
-    powerStatus: "온라인",
-    wearStatus: "착용중",
-    lastUpdate: "2024-01-15 14:30:25",
-  },
-  {
-    id: "AICT-002",
-    name: "AICT-002",
-    lat: 37.5651,
-    lng: 126.9895,
-    status: "점검필요",
-    powerStatus: "오프라인",
-    wearStatus: "미착용",
-    lastUpdate: "2024-01-15 12:15:10",
-  },
-  {
-    id: "AICT-003",
-    name: "AICT-003",
-    lat: 37.5707,
-    lng: 126.9772,
-    status: "정상",
-    powerStatus: "온라인",
-    wearStatus: "착용중",
-    lastUpdate: "2024-01-15 14:28:15",
-  },
-  {
-    id: "AICT-004",
-    name: "AICT-004",
-    lat: 37.5689,
-    lng: 126.9831,
-    status: "비상",
-    powerStatus: "온라인",
-    wearStatus: "착용중",
-    lastUpdate: "2024-01-15 14:35:12",
-  },
-];
-
 const containerStyle = {
   width: "100%",
   height: "100%",
@@ -85,7 +25,7 @@ const center = {
   lng: 126.978,
 };
 
-export function MapView() {
+export function MapView({device}: BodyProps) {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [filters, setFilters] = useState<Filters>({
@@ -110,8 +50,8 @@ export function MapView() {
     }));
   };
 
-  const filteredDevices = deviceLocations.filter((device) => {
-    return filters[device.status] && filters[device.powerStatus] && filters[device.wearStatus];
+  const filteredDevices = device.filter((d) => {
+    return filters[d.status] && filters[d.powerStatus] && filters[d.wearStatus];
   });
 
   const onLoad = useCallback(

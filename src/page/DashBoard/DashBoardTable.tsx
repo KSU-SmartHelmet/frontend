@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import devices from "@/sample/Devices.ts";
 import { Shield } from "lucide-react";
+import { type BodyProps } from "@/page/DashBoard/dashboard-page.tsx";
 
-export default function DashBoardTable() {
+export default function DashBoardTable({ device }: BodyProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "정상":
@@ -17,8 +17,8 @@ export default function DashBoardTable() {
     }
   };
 
-  const getPowerStatusIcon = (status: boolean) => {
-    return status ? (
+  const getPowerStatusIcon = (status: string) => {
+    return status === "온라인" ? (
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
         <span className="text-emerald-700">{status}</span>
@@ -31,11 +31,11 @@ export default function DashBoardTable() {
     );
   };
 
-  const getWearStatusBadge = (status: boolean) => {
-    return status ? (
-      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">착용중</Badge>
+  const getWearStatusBadge = (status: string) => {
+    return status === "착용중" ? (
+      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">{status}</Badge>
     ) : (
-      <Badge variant="secondary">미착용</Badge>
+      <Badge variant="secondary">{status}</Badge>
     );
   };
 
@@ -48,13 +48,12 @@ export default function DashBoardTable() {
               <TableHead className="font-semibold text-gray-900 py-4">디바이스명</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">전원상태</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">착용상태</TableHead>
-              <TableHead className="font-semibold text-gray-900 py-4">최근 접속시간</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">마지막 접속시간</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">상태</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {devices.length === 0 ? (
+            {device.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12">
                   <div className="flex flex-col items-center gap-3">
@@ -69,14 +68,13 @@ export default function DashBoardTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              devices.map((device, index) => (
+              device.map((d, index) => (
                 <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                  <TableCell className="font-medium py-4">{device.deviceName}</TableCell>
-                  <TableCell className="py-4">{getPowerStatusIcon(device.powerStatus)}</TableCell>
-                  <TableCell className="py-4">{getWearStatusBadge(device.wearStatus)}</TableCell>
-                  <TableCell className="text-sm text-gray-600 py-4">{device.lastConnection}</TableCell>
-                  <TableCell className="text-sm text-gray-600 py-4">{device.lastAccess}</TableCell>
-                  <TableCell className="py-4">{getStatusBadge(device.status)}</TableCell>
+                  <TableCell className="font-medium py-4">{d.name}</TableCell>
+                  <TableCell className="py-4">{getPowerStatusIcon(d.powerStatus)}</TableCell>
+                  <TableCell className="py-4">{getWearStatusBadge(d.wearStatus)}</TableCell>
+                  <TableCell className="text-sm text-gray-600 py-4">{d.lastUpdate}</TableCell>
+                  <TableCell className="py-4">{getStatusBadge(d.status)}</TableCell>
                 </TableRow>
               ))
             )}

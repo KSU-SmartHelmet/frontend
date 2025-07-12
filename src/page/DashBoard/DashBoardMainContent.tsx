@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Download, Filter, HardHat, Power, RefreshCw, Search, Shield, Wifi } from "lucide-react";
 import DashBoardTable from "./DashBoardTable";
+import { type BodyProps } from "@/page/DashBoard/dashboard-page.tsx";
 
-export default function DashBoardMainContent() {
+export default function DashBoardMainContent({ device }: BodyProps) {
   const [activeFilter, setActiveFilter] = useState("전체");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -142,7 +143,7 @@ export default function DashBoardMainContent() {
             </div>
 
             {/* Table */}
-            <DashBoardTable />
+            <DashBoardTable device={device} />
           </CardContent>
         </Card>
       </div>
