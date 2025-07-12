@@ -1,6 +1,7 @@
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate } from "react-router";
 import Header from "../Header";
 import DashBoardMainContent from "./DashBoardMainContent";
+import {useEffect} from "react";
 
 export function DashboardPage() {
   const env = {
@@ -8,30 +9,27 @@ export function DashboardPage() {
   };
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const isMapView = location.pathname === "/map";
 
-  const handleViewChange = (showMap: boolean) => {
-    navigate(showMap ? "/map" : "/dashboard");
-  };
-
-  const onLogout = () => {
-    fetch(`${env.SERVER_URL}/logout`, {
-      method: "POST",
+  useEffect(() => {
+    fetch(`${env.SERVER_URL}/home`, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": localStorage.getItem("accessToken"),
+        "Authorization": localStorage.getItem("accessToken") || '',
       },
     })
-      .then(() => {
-        localStorage.removeItem("accessToken");
-        navigate("/login");
-      });
-  }
+      .then(res => {
+        if (!res.ok) {
+          alert("토큰이 유효하지 않습니다. 다시 로그인 해주세요.");
+          navigate("/login");
+          return;
+        }
+      })
+  }, [navigate, env.SERVER_URL]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header showMap={isMapView} setShowMap={handleViewChange} onLogout={onLogout} />
+      <Header />
       <DashBoardMainContent />
     </div>
   );

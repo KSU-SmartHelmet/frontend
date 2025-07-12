@@ -8,21 +8,31 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface HeaderProps {
-  onLogout?: () => void;
-}
-
-export default function Header({ onLogout }: HeaderProps) {
+export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMapView = location.pathname === "/map";
 
+  const onLogout = () => {
+    const env = {
+      SERVER_URL: import.meta.env.VITE_SERVER_URL,
+    };
+
+    fetch(`${env.SERVER_URL}/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": localStorage.getItem("accessToken") || '',
+      },
+    })
+      .then(() => {
+        localStorage.removeItem("accessToken");
+        navigate("/login");
+      });
+  }
+
   const handleViewChange = () => {
-    if (isMapView) {
-      navigate("/dashboard");
-    } else {
-      navigate("/map");
-    }
+    navigate(isMapView ? "/dashboard" : "/map");
   };
 
   return (
