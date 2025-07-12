@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, User, Lock } from "lucide-react";
 import { useNavigate } from "react-router";
+import { Link } from "react-router";
 
 export function LoginPage() {
   const env = {
@@ -26,12 +27,6 @@ export function LoginPage() {
     e.preventDefault();
     setError("");
 
-    // TODO: 개발용 계정 (배포시 삭제)
-    if (formData.id === "admin" && formData.password === "admin123") {
-      navigate("/dashboard");
-      return;
-    }
-
     if (!formData.id) {
       setError("아이디를 입력해 주세요.");
       return;
@@ -41,7 +36,7 @@ export function LoginPage() {
       return;
     }
 
-    fetch(`${env.SERVER_URL}/signin`, {
+    fetch(`${env.SERVER_URL}/signIn`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,13 +46,9 @@ export function LoginPage() {
         "password": formData.password,
       }),
     })
+        .then(res => res.text())
         .then(res => {
-          if (!res.ok)
-            throw new Error(res.statusText);
-          return res.json();
-        })
-        .then(res => {
-          localStorage.setItem("accessToken", res.data);
+          localStorage.setItem("accessToken", "Bearer " + res);
           navigate("/dashboard");
         })
         .catch(err => {
@@ -123,9 +114,15 @@ export function LoginPage() {
               type="submit"
               className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               size="lg"
+              onClick={handleLogin}
             >
               로그인하기
             </Button>
+            <div className="text-center">
+              <Link to="/signup" className="text-sm text-white/70 hover:text-white">
+                회원가입
+              </Link>
+            </div>
 
             {/*TODO: 배포 시 삭제 (개발용)*/}
             <div className="text-white/70 text-sm text-center space-y-1">
