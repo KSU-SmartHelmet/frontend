@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Shield } from "lucide-react";
-import { type BodyProps } from "@/page/DashBoard/dashboard-page.tsx";
+import {type BodyProps } from "@/page/DashBoard/dashboard-page.tsx";
 
 export default function DashBoardTable({ device }: BodyProps) {
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "정상":

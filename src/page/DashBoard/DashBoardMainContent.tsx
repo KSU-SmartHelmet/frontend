@@ -1,14 +1,40 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Download, Filter, HardHat, Power, RefreshCw, Search, Shield, Wifi } from "lucide-react";
 import DashBoardTable from "./DashBoardTable";
-import { type BodyProps } from "@/page/DashBoard/dashboard-page.tsx";
+import {type BodyProps, type Device} from "@/page/DashBoard/dashboard-page.tsx";
 
 export default function DashBoardMainContent({ device }: BodyProps) {
   const [activeFilter, setActiveFilter] = useState("전체");
   const [searchTerm, setSearchTerm] = useState("");
+  const [filteredDevices, setFilteredDevices] = useState<Device[]>(device);
+
+  useEffect(() => {
+    switch (activeFilter) {
+      case "전체":
+        setFilteredDevices(device.filter(d => {
+          return d.name.toLowerCase().includes(searchTerm.toLowerCase());
+        }));
+        break;
+      case "켜짐":
+        setFilteredDevices(device.filter(d => {
+          return d.powerStatus === "온라인" && d.name.toLowerCase().includes(searchTerm.toLowerCase());
+        }));
+        break;
+      case "꺼짐":
+        setFilteredDevices(device.filter(d => {
+          return d.powerStatus === "오프라인" && d.name.toLowerCase().includes(searchTerm.toLowerCase());
+        }));
+        break;
+      case "비상":
+        setFilteredDevices(device.filter(d => {
+          return d.status === "비상" && d.name.toLowerCase().includes(searchTerm.toLowerCase());
+        }));
+        break;
+    }
+  }, [activeFilter, searchTerm, device]);
 
   return (
     <main className="p-6">
@@ -22,7 +48,7 @@ export default function DashBoardMainContent({ device }: BodyProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">총 기기</p>
-                  <p className="text-2xl font-bold text-gray-900">24</p>
+                  <p className="text-2xl font-bold text-gray-900">{device.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -36,7 +62,9 @@ export default function DashBoardMainContent({ device }: BodyProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">온라인</p>
-                  <p className="text-2xl font-bold text-gray-900">18</p>
+                  <p className="text-2xl font-bold text-gray-900">{device.filter(d => {
+                    return d.powerStatus === "온라인";
+                  }).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -50,7 +78,9 @@ export default function DashBoardMainContent({ device }: BodyProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">착용중</p>
-                  <p className="text-2xl font-bold text-gray-900">15</p>
+                  <p className="text-2xl font-bold text-gray-900">{device.filter(d => {
+                    return d.wearStatus === "착용중";
+                  }).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -64,7 +94,9 @@ export default function DashBoardMainContent({ device }: BodyProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">오프라인</p>
-                  <p className="text-2xl font-bold text-gray-900">6</p>
+                  <p className="text-2xl font-bold text-gray-900">{device.filter(d => {
+                    return d.powerStatus === "오프라인";
+                  }).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -78,7 +110,9 @@ export default function DashBoardMainContent({ device }: BodyProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">비상</p>
-                  <p className="text-2xl font-bold text-red-600">2</p>
+                  <p className="text-2xl font-bold text-red-600">{device.filter(d => {
+                    return d.status === "비상";
+                  }).length}</p>
                 </div>
               </div>
             </CardContent>
@@ -143,7 +177,7 @@ export default function DashBoardMainContent({ device }: BodyProps) {
             </div>
 
             {/* Table */}
-            <DashBoardTable device={device} />
+            <DashBoardTable device={filteredDevices} />
           </CardContent>
         </Card>
       </div>
