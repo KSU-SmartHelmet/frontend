@@ -52,11 +52,16 @@ export function SignupPage() {
         "password": formData.password,
       }),
     })
-        .then(() => {
+        .then(res => res.text())
+        .then(res => {
+          if (res === "이미 존재하는 사용자입니다.") {
+            setError("이미 존재하는 사용자입니다.");
+            return;
+          }
           navigate("/login");
         })
         .catch(err => {
-          setError("회원가입에 실패했습니다.");
+          setError(err || "회원가입에 실패했습니다.");
           console.error(err);
         })
   };
