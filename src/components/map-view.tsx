@@ -139,7 +139,6 @@ export function MapView() {
 
   return (
     <>
-      <Header />
       <div className="relative w-full h-[calc(100vh-81px)] overflow-hidden">
         {isLoaded ? (
           <GoogleMap

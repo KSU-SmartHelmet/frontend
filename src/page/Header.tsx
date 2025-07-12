@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, HardHat, LogOut, Map, User } from "lucide-react";
 import {
@@ -8,10 +8,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function Header() {
-  const location = useLocation();
+interface HeaderProps {
+  userName: string;
+  isMapView: boolean;
+  setIsMapView: (isMapView: boolean) => void;
+}
+
+export default function Header({ userName, isMapView, setIsMapView }: HeaderProps) {
   const navigate = useNavigate();
-  const isMapView = location.pathname === "/map";
 
   const onLogout = () => {
     const env = {
@@ -32,7 +36,7 @@ export default function Header() {
   }
 
   const handleViewChange = () => {
-    navigate(isMapView ? "/dashboard" : "/map");
+    setIsMapView(!isMapView);
   };
 
   return (
@@ -63,7 +67,7 @@ export default function Header() {
                     className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100"
                   >
                     <User className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">관리자명</span>
+                    <span className="text-sm font-medium text-gray-700">{userName}</span>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
