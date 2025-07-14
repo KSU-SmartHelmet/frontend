@@ -12,7 +12,7 @@ export default function DashBoardTable({ device }: BodyProps) {
       case "점검필요":
         return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">점검필요</Badge>;
       case "비상":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">비상</Badge>;
+        return <Badge className="bg-red-500 text-white hover:bg-red-500 animate-pulse">비상</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -70,7 +70,11 @@ export default function DashBoardTable({ device }: BodyProps) {
               </TableRow>
             ) : (
               device.map((d, index) => (
-                <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
+                <TableRow key={index} className={`border-b border-gray-100 transition-colors ${
+                  d.status === "비상"
+                    ? "bg-red-50 hover:bg-red-100"
+                    : "hover:bg-gray-50"
+                }`}>
                   <TableCell className="font-medium py-4">{d.name}</TableCell>
                   <TableCell className="py-4">{getPowerStatusIcon(d.powerStatus)}</TableCell>
                   <TableCell className="py-4">{getWearStatusBadge(d.wearStatus)}</TableCell>
