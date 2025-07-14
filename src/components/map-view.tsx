@@ -4,6 +4,7 @@ import { Filter } from "lucide-react";
 import { useState, useCallback } from "react";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import { type Device, type DeviceStatus, type BodyProps } from "@/page/DashBoard/dashboard-page";
+import { mapStyles } from "@/lib/map-styles";
 
 interface Filters {
   정상: boolean;
@@ -51,11 +52,19 @@ export function MapView({device}: BodyProps) {
   };
 
   const filteredDevices = device.filter((d) => {
-    return filters[d.status] && filters[d.powerStatus] && filters[d.wearStatus];
+    const statusKey = d.status as keyof Filters;
+    const powerStatusKey = d.powerStatus as keyof Filters;
+    const wearStatusKey = d.wearStatus as keyof Filters;
+    return filters[statusKey] && filters[powerStatusKey] && filters[wearStatusKey];
   });
 
   const onLoad = useCallback(
     function callback(map: google.maps.Map) {
+      if (filteredDevices.length === 0) {
+        map.setCenter(center);
+        map.setZoom(13);
+        return;
+      }
       const bounds = new window.google.maps.LatLngBounds();
       filteredDevices.forEach((device) => {
         bounds.extend({ lat: device.lat, lng: device.lng });
@@ -66,14 +75,28 @@ export function MapView({device}: BodyProps) {
   );
 
   const getMarkerIcon = (status: DeviceStatus) => {
-    const color = status === "정상" ? "#10B981" : status === "점검필요" ? "#F59E0B" : "#EF4444";
+    const isEmergency = status === "비상";
+    const color = isEmergency ? "#EF4444" : status === "점검필요" ? "#F59E0B" : "#10B981";
+
+    const pulseSvg = (pulseColor: string, scale: number) => `
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g>
+          <circle cx="24" cy="24" r="7" fill="${color}" stroke="#FFFFFF" stroke-width="2"></circle>
+          <circle cx="24" cy="24" r="8" stroke="${pulseColor}" stroke-width="2">
+            <animate attributeName="r" from="8" to="${scale}" dur="1.5s" begin="0s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from="1" to="0" dur="1.5s" begin="0s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </svg>`;
+
+    const svg = isEmergency
+      ? pulseSvg(color, 20)
+      : pulseSvg("rgba(255, 255, 255, 0.5)", 14);
+
     return {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 8,
-      fillColor: color,
-      fillOpacity: 1,
-      strokeColor: "#FFFFFF",
-      strokeWeight: 2,
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+      scaledSize: new window.google.maps.Size(48, 48),
+      anchor: new window.google.maps.Point(24, 24),
     };
   };
 
@@ -87,13 +110,10 @@ export function MapView({device}: BodyProps) {
             zoom={13}
             onLoad={onLoad}
             options={{
-              styles: [
-                {
-                  featureType: "poi",
-                  elementType: "labels",
-                  stylers: [{ visibility: "off" }],
-                },
-              ],
+              styles: mapStyles,
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
             }}
           >
             {filteredDevices.map((device) => (
@@ -102,6 +122,7 @@ export function MapView({device}: BodyProps) {
                 position={{ lat: device.lat, lng: device.lng }}
                 onClick={() => setSelectedDevice(device)}
                 icon={getMarkerIcon(device.status)}
+                zIndex={device.status === '비상' ? 100 : 1}
               />
             ))}
 
@@ -109,42 +130,47 @@ export function MapView({device}: BodyProps) {
               <InfoWindow
                 position={{ lat: selectedDevice.lat, lng: selectedDevice.lng }}
                 onCloseClick={() => setSelectedDevice(null)}
+                options={{
+                  pixelOffset: new window.google.maps.Size(0, -40)
+                }}
               >
-                <div className="p-2 min-w-48">
-                  <div className="text-sm font-semibold text-gray-900 mb-1">{selectedDevice.name}</div>
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <div className="flex justify-between">
-                      <span>상태:</span>
+                <div className="p-3 bg-white rounded-lg shadow-xl min-w-[240px]">
+                  <div className="text-base font-bold text-gray-800 mb-3 border-b pb-2">{selectedDevice.name}</div>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="font-medium text-gray-500">상태</span>
                       <Badge
-                        className={`text-xs ${
+                        className={`text-xs font-semibold ${
                           selectedDevice.status === "정상"
                             ? "bg-emerald-100 text-emerald-800"
                             : selectedDevice.status === "점검필요"
                             ? "bg-amber-100 text-amber-800"
-                            : "bg-red-100 text-red-800"
+                            : "bg-red-500 text-white animate-pulse"
                         }`}
                       >
                         {selectedDevice.status}
                       </Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span>전원:</span>
-                      <span className={selectedDevice.powerStatus === "온라인" ? "text-emerald-600" : "text-red-600"}>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="font-medium text-gray-500">전원</span>
+                      <span className={`font-semibold ${selectedDevice.powerStatus === "온라인" ? "text-emerald-600" : "text-red-600"}`}>
                         {selectedDevice.powerStatus}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>착용:</span>
-                      <span>{selectedDevice.wearStatus}</span>
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="font-medium text-gray-500">착용</span>
+                      <span className="font-semibold">{selectedDevice.wearStatus}</span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-2">{selectedDevice.lastUpdate}</div>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-3 pt-2 border-t">
+                    마지막 업데이트: {selectedDevice.lastUpdate}
                   </div>
                 </div>
               </InfoWindow>
             )}
           </GoogleMap>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
           </div>
         )}
@@ -154,8 +180,8 @@ export function MapView({device}: BodyProps) {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 bg-white shadow-lg"
-            onClick={() => setShowFilterModal(true)}
+            className="gap-2 bg-white shadow-lg hover:bg-gray-50"
+            onClick={() => setShowFilterModal(!showFilterModal)}
           >
             <Filter className="w-4 h-4" />
             필터
@@ -164,7 +190,7 @@ export function MapView({device}: BodyProps) {
 
         {/* 필터 패널 */}
         {showFilterModal && (
-          <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 w-64 z-20">
+          <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 w-64 z-20 animate-in fade-in-0 slide-in-from-top-2 duration-300">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-bold text-gray-900">마커 필터링</h3>
               <button onClick={() => setShowFilterModal(false)} className="text-gray-500 hover:text-gray-700">
@@ -183,24 +209,15 @@ export function MapView({device}: BodyProps) {
                     { key: "비상" as const, label: "비상", color: "bg-red-500" },
                   ].map((item) => (
                     <div key={item.key} className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleFilter(item.key)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center ${
-                          filters[item.key] ? "bg-blue-500 border-blue-500" : "border-gray-300"
-                        }`}
-                      >
-                        {filters[item.key] && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </button>
+                      <input
+                        type="checkbox"
+                        id={`filter-${item.key}`}
+                        checked={filters[item.key]}
+                        onChange={() => toggleFilter(item.key)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
                       <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                      <span className="text-xs text-gray-700">{item.label}</span>
+                      <label htmlFor={`filter-${item.key}`} className="text-xs text-gray-700">{item.label}</label>
                     </div>
                   ))}
                 </div>
@@ -211,28 +228,18 @@ export function MapView({device}: BodyProps) {
                 <h4 className="text-xs font-medium text-gray-700 mb-2">전원 상태</h4>
                 <div className="space-y-2">
                   {[
-                    { key: "온라인" as const, label: "온라인", color: "bg-emerald-500" },
-                    { key: "오프라인" as const, label: "오프라인", color: "bg-red-500" },
+                    { key: "온라인" as const, label: "온라인" },
+                    { key: "오프라인" as const, label: "오프라인" },
                   ].map((item) => (
                     <div key={item.key} className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleFilter(item.key)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center ${
-                          filters[item.key] ? "bg-blue-500 border-blue-500" : "border-gray-300"
-                        }`}
-                      >
-                        {filters[item.key] && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                      <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                      <span className="text-xs text-gray-700">{item.label}</span>
+                       <input
+                        type="checkbox"
+                        id={`filter-${item.key}`}
+                        checked={filters[item.key as keyof Filters]}
+                        onChange={() => toggleFilter(item.key as keyof Filters)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor={`filter-${item.key}`} className="text-xs text-gray-700">{item.label}</label>
                     </div>
                   ))}
                 </div>
@@ -243,28 +250,18 @@ export function MapView({device}: BodyProps) {
                 <h4 className="text-xs font-medium text-gray-700 mb-2">착용 상태</h4>
                 <div className="space-y-2">
                   {[
-                    { key: "착용중" as const, label: "착용중", color: "bg-blue-500" },
-                    { key: "미착용" as const, label: "미착용", color: "bg-gray-400" },
+                    { key: "착용중" as const, label: "착용중" },
+                    { key: "미착용" as const, label: "미착용" },
                   ].map((item) => (
                     <div key={item.key} className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleFilter(item.key)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center ${
-                          filters[item.key] ? "bg-blue-500 border-blue-500" : "border-gray-300"
-                        }`}
-                      >
-                        {filters[item.key] && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                      <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                      <span className="text-xs text-gray-700">{item.label}</span>
+                       <input
+                        type="checkbox"
+                        id={`filter-${item.key}`}
+                        checked={filters[item.key as keyof Filters]}
+                        onChange={() => toggleFilter(item.key as keyof Filters)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor={`filter-${item.key}`} className="text-xs text-gray-700">{item.label}</label>
                     </div>
                   ))}
                 </div>
