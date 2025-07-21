@@ -46,9 +46,13 @@ export function LoginPage() {
         "password": formData.password,
       }),
     })
-        .then(res => res.text())
         .then(res => {
-          localStorage.setItem("accessToken", "Bearer " + res);
+          if (res.status !== 200)
+            throw new Error(res.statusText);
+          return res.text();
+        })
+        .then(res => {
+          localStorage.setItem("accessToken", "Bearer " + res.trim());
           navigate("/dashboard");
         })
         .catch(err => {
