@@ -33,7 +33,7 @@ export default function DashBoardTable({ device }: BodyProps) {
   };
 
   const getWearStatusBadge = (status: string) => {
-    return status === "착용중" ? (
+    return status === "착용" ? (
       <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">{status}</Badge>
     ) : (
       <Badge variant="secondary">{status}</Badge>

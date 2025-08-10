@@ -79,7 +79,7 @@ export default function DashBoardMainContent({ device }: BodyProps) {
                 <div>
                   <p className="text-sm text-gray-600 font-medium">착용중</p>
                   <p className="text-2xl font-bold text-gray-900">{device.filter(d => {
-                    return d.wearStatus === "착용중";
+                    return d.wearStatus === "착용";
                   }).length}</p>
                 </div>
               </div>

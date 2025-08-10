@@ -12,7 +12,7 @@ interface Filters {
   비상: boolean;
   온라인: boolean;
   오프라인: boolean;
-  착용중: boolean;
+  착용: boolean;
   미착용: boolean;
 }
 
@@ -35,7 +35,7 @@ export function MapView({device}: BodyProps) {
     비상: true,
     온라인: true,
     오프라인: true,
-    착용중: true,
+    착용: true,
     미착용: true,
   });
 
@@ -250,7 +250,7 @@ export function MapView({device}: BodyProps) {
                 <h4 className="text-xs font-medium text-gray-700 mb-2">착용 상태</h4>
                 <div className="space-y-2">
                   {[
-                    { key: "착용중" as const, label: "착용중" },
+                    { key: "착용" as const, label: "착용" },
                     { key: "미착용" as const, label: "미착용" },
                   ].map((item) => (
                     <div key={item.key} className="flex items-center gap-2">
