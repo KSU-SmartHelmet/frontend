@@ -1,15 +1,49 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Download, Filter, HardHat, Power, RefreshCw, Search, Shield, Wifi } from "lucide-react";
+import { AlertTriangle, Download, Filter, HardHat, Power, Search, Shield, Wifi } from "lucide-react";
 import DashBoardTable from "./DashBoardTable";
 import {type BodyProps, type Device} from "@/page/DashBoard/dashboard-page.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import DateUtils from "@/lib/DateUtils.ts";
 
 export default function DashBoardMainContent({ device }: BodyProps) {
   const [activeFilter, setActiveFilter] = useState("전체");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredDevices, setFilteredDevices] = useState<Device[]>(device);
+
+  const exportText = useCallback(() => {
+    const fileName = `${DateUtils.formattedNow()}.txt`;
+    let content = `${fileName}\n\n`;
+    device.forEach((d: Device) => {
+      content += `${d.name}\n`;
+      content += `  위치: ${d.lat}, ${d.lng}\n`;
+      content += `  전원: ${d.powerStatus}\n`;
+      content += `  착용: ${d.wearStatus}\n`;
+      content += `  비상: ${d.status}\n\n`;
+    })
+
+    const element = document.createElement("a");
+    const file = new Blob([content], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = fileName;
+    document.body.appendChild(element);
+    element.click();
+  }, [device]);
+
+  const exportExcel = () => {
+
+  }
+
+  const exportPdf = () => {
+
+  }
 
   useEffect(() => {
     switch (activeFilter) {
@@ -125,14 +159,25 @@ export default function DashBoardMainContent({ device }: BodyProps) {
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-bold text-gray-900">기기 상태 관리</CardTitle>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="w-4 h-4" />
-                  내보내기
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <RefreshCw className="w-4 h-4" />
-                  새로고침
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="w-4 h-4" />
+                      내보내기
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={exportText}>
+                      텍스트 파일 (.txt)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={exportExcel}>
+                      엑셀 (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={exportPdf}>
+                      PDF (.pdf)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </CardHeader>
