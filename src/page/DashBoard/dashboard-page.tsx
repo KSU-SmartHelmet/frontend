@@ -6,7 +6,11 @@ import {MapView} from "@/components/map-view.tsx";
 
 export type DeviceStatus = "정상" | "점검필요" | "비상";
 export type PowerStatus = "온라인" | "오프라인";
-export type WearStatus = "착용중" | "미착용";
+export type WearStatus = "착용" | "미착용";
+
+const env = {
+  SERVER_URL: import.meta.env.VITE_SERVER_URL,
+};
 
 export interface Device {
   id: string;
@@ -23,58 +27,30 @@ export interface BodyProps {
   device: Device[];
 }
 
-const sampleDevices: Device[] = [
-  {
-    id: "AICT-001",
-    name: "AICT-001",
-    lat: 37.5665,
-    lng: 126.978,
-    status: "정상",
-    powerStatus: "온라인",
-    wearStatus: "착용중",
-    lastUpdate: "2024-01-15 14:30:25",
-  },
-  {
-    id: "AICT-002",
-    name: "AICT-002",
-    lat: 37.5651,
-    lng: 126.9895,
-    status: "점검필요",
-    powerStatus: "오프라인",
-    wearStatus: "미착용",
-    lastUpdate: "2024-01-15 12:15:10",
-  },
-  {
-    id: "AICT-003",
-    name: "AICT-003",
-    lat: 37.5707,
-    lng: 126.9772,
-    status: "정상",
-    powerStatus: "온라인",
-    wearStatus: "착용중",
-    lastUpdate: "2024-01-15 14:28:15",
-  },
-  {
-    id: "AICT-004",
-    name: "AICT-004",
-    lat: 37.5689,
-    lng: 126.9831,
-    status: "비상",
-    powerStatus: "온라인",
-    wearStatus: "착용중",
-    lastUpdate: "2024-01-15 14:35:12",
-  },
-];
-
-
 export function DashboardPage() {
-  const env = {
-    SERVER_URL: import.meta.env.VITE_SERVER_URL,
-  };
 
   const navigate = useNavigate();
   const [userName, setUserName] = useState("로딩 중");
   const [isMapView, setIsMapView] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+
+  const setSSEevents = (eventSource:EventSource, originDevices: Device[]) => {
+    eventSource.addEventListener('device-update', (event) => {
+      try {
+        const data: Device = JSON.parse(event.data);
+        setDevices(originDevices.map((device) => {
+          return device.id === data.id ? data : device;
+        }));
+      } catch (error) {
+        console.error("Failed to parse SSE 'device-update' event data:", error);
+      }
+    });
+
+    eventSource.onerror = (error) => {
+      console.error(`SSE connection error:`, error);
+      eventSource.close();
+    }
+  }
 
   useEffect(() => {
     fetch(`${env.SERVER_URL}/home`, {
@@ -95,17 +71,37 @@ export function DashboardPage() {
       .then(res => {
         if (res) {
           const user = res.split(' ')[1]
-          setUserName(user.substring(0, user.length - 2));
+          setUserName(user.substring(0, user.length - 2).trim());
         }
+      });
+
+    const eventSource = new EventSource('http://localhost:8080/subscribe');
+
+    fetch(`${env.SERVER_URL}/dashboard`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json();
       })
-  }, [navigate, env.SERVER_URL]);
+      .then(data => {
+        const originDevices: Device[] = data as Device[];
+        setDevices(originDevices);
+        setSSEevents(eventSource, originDevices);
+      })
+      .catch(error => {
+        console.error("헬멧 데이터를 가져오는 중 오류가 발생했습니다:", error);
+      });
+
+    return () => { eventSource.close(); }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header userName={userName} isMapView={isMapView} setIsMapView={setIsMapView} />
       { isMapView ?
-        <MapView device={sampleDevices} />
-        : <DashBoardMainContent device={sampleDevices} />
+        <MapView device={devices} />
+        : <DashBoardMainContent device={devices} />
       }
     </div>
   );
