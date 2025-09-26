@@ -62,77 +62,68 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-purple-900 to-emerald-500 p-4">
-      <div className="absolute inset-0 bg-black/20"></div>
-
-      <Card className="w-full max-w-md relative z-10 backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Shield className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md bg-white shadow-lg rounded-xl">
+        <CardHeader className="text-center space-y-4 pt-8">
+          <div className="mx-auto w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center">
+            <Shield className="w-8 h-8 text-blue-500" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-white">AICT 스마트 안전모</CardTitle>
-            <CardDescription className="text-white/80 mt-2">관리자 시스템에 로그인하세요</CardDescription>
+            <CardTitle className="text-2xl font-bold text-gray-800">HelLoRa 스마트 안전모</CardTitle>
+            <CardDescription className="text-gray-600 mt-2">관리자 시스템에 로그인하세요</CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="p-8 space-y-6">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="id" className="text-white/90 font-medium">
+              <Label htmlFor="id" className="text-gray-700 font-medium">
                 아이디
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="id"
                   type="text"
                   value={formData.id}
                   onChange={(e) => handleInputChange("id", e.target.value)}
-                  className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/50 focus:ring-white/20"
+                  className="pl-10"
                   placeholder="아이디를 입력하세요"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/90 font-medium">
+              <Label htmlFor="password" className="text-gray-700 font-medium">
                 비밀번호
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  className="pl-10 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white/50 focus:ring-white/20"
+                  className="pl-10"
                   placeholder="비밀번호를 입력하세요"
                 />
               </div>
             </div>
 
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+            {error && <p className="text-red-500 text-sm text-center pt-2">{error}</p>}
 
             <Button
               type="submit"
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full bg-blue-400 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
               size="lg"
               onClick={handleLogin}
             >
               로그인하기
             </Button>
             <div className="text-center">
-              <Link to="/signup" className="text-sm text-white/70 hover:text-white">
+              <Link to="/signup" className="text-sm text-gray-500 hover:text-gray-700">
                 회원가입
               </Link>
-            </div>
-
-            {/*TODO: 배포 시 삭제 (개발용)*/}
-            <div className="text-white/70 text-sm text-center space-y-1">
-              <p>테스트 계정 정보</p>
-              <p>아이디: admin</p>
-              <p>비밀번호: admin123</p>
             </div>
           </form>
         </CardContent>
