@@ -26,7 +26,7 @@ const center = {
   lng: 126.978,
 };
 
-export function MapView({device}: BodyProps) {
+export function MapView({device, setDevice}: BodyProps) {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [filters, setFilters] = useState<Filters>({

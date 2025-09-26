@@ -19,6 +19,6 @@ export default class DateUtils {
     const hour = originTime.getHours().toString().padStart(2, '0');
     const minute = originTime.getMinutes().toString().padStart(2, '0');
     const second = originTime.getSeconds().toString().padStart(2, '0');
-    return `${year}.${month}.${day} ${hour}${minute}${second}`;
+    return `${year}.${month}.${day} ${hour}:${minute}:${second}`;
   };
 }

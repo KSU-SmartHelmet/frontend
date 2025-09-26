@@ -2,8 +2,23 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Shield } from "lucide-react";
 import {type BodyProps } from "@/page/DashBoard/dashboard-page.tsx";
+import { forwardRef, useEffect } from "react";
 
-export default function DashBoardTable({ device }: BodyProps) {
+const DashBoardTable = forwardRef<HTMLDivElement, BodyProps>(({ device, setDevice }, ref) => {
+
+  useEffect(() => {
+    if (device.length > 0) {
+      const zones = ["1구역", "2구역", "3구역", "4구역"];
+      const needsUpdate = device.some(d => !d.zone);
+      if (needsUpdate) {
+        const updatedDevice = device.map(d => ({
+          ...d,
+          zone: d.zone || zones[Math.floor(parseInt(d.name.substring(9))%zones.length)]
+        }));
+        setDevice(updatedDevice);
+      }
+    }
+  }, [device, setDevice]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -26,8 +41,8 @@ export default function DashBoardTable({ device }: BodyProps) {
       </div>
     ) : (
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-        <span className="text-red-700">{status}</span>
+        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+        <span className="text-gray-400">{status}</span>
       </div>
     );
   };
@@ -42,13 +57,14 @@ export default function DashBoardTable({ device }: BodyProps) {
 
   return (
     <>
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div ref={ref} className="border border-gray-200 rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50 border-b border-gray-200">
               <TableHead className="font-semibold text-gray-900 py-4">디바이스명</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">전원상태</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">착용상태</TableHead>
+              <TableHead className="font-semibold text-gray-900 py-4">위치</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">마지막 접속시간</TableHead>
               <TableHead className="font-semibold text-gray-900 py-4">상태</TableHead>
             </TableRow>
@@ -78,6 +94,7 @@ export default function DashBoardTable({ device }: BodyProps) {
                   <TableCell className="font-medium py-4">{d.name}</TableCell>
                   <TableCell className="py-4">{getPowerStatusIcon(d.powerStatus)}</TableCell>
                   <TableCell className="py-4">{getWearStatusBadge(d.wearStatus)}</TableCell>
+                  <TableCell className="py-4">{d.zone || "탐지되지 않음"}</TableCell>
                   <TableCell className="text-sm text-gray-600 py-4">{d.lastUpdate}</TableCell>
                   <TableCell className="py-4">{getStatusBadge(d.status)}</TableCell>
                 </TableRow>
@@ -88,4 +105,6 @@ export default function DashBoardTable({ device }: BodyProps) {
       </div>
     </>
   );
-}
+});
+
+export default DashBoardTable;

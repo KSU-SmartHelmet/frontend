@@ -50,7 +50,7 @@ export default function Header({ userName, isMapView, setIsMapView }: HeaderProp
               </div>
               <div>
                 <Link to="/dashboard">
-                  <h1 className="text-xl font-bold text-gray-900">스마트 안전모 관리시스템</h1>
+                  <h1 className="text-xl font-bold text-gray-900">HelLoRa 관리 시스템</h1>
                 </Link>
               </div>
             </div>

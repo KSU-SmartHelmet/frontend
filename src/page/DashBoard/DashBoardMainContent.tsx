@@ -1,8 +1,8 @@
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useState, useRef} from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Download, Filter, HardHat, Power, Search, Shield, Wifi } from "lucide-react";
+import { AlertTriangle, Download, Filter, HardHat, Power, Search, Shield, Wifi, MapPin } from "lucide-react";
 import DashBoardTable from "./DashBoardTable";
 import {type BodyProps, type Device} from "@/page/DashBoard/dashboard-page.tsx";
 import {
@@ -12,11 +12,23 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import DateUtils from "@/lib/DateUtils.ts";
+import * as XLSX from "xlsx/xlsx.mjs";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
-export default function DashBoardMainContent({ device }: BodyProps) {
+export default function DashBoardMainContent({ device, setDevice }: BodyProps) {
   const [activeFilter, setActiveFilter] = useState("전체");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredDevices, setFilteredDevices] = useState<Device[]>(device);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  const zones = ["1구역", "2구역", "3구역", "4구역"];
+  const zoneCounts = device.reduce((counts, d) => {
+    if (d.zone && counts.hasOwnProperty(d.zone)) {
+      counts[d.zone]++;
+    }
+    return counts;
+  }, Object.fromEntries(zones.map(zone => [zone, 0])) as Record<string, number>);
 
   const exportText = useCallback(() => {
     const fileName = `${DateUtils.formattedNow()}.txt`;
@@ -35,14 +47,44 @@ export default function DashBoardMainContent({ device }: BodyProps) {
     element.download = fileName;
     document.body.appendChild(element);
     element.click();
+    document.body.removeChild(element);
   }, [device]);
 
   const exportExcel = () => {
+    const fileName = `${DateUtils.formattedNow()}.xlsx`;
+    const datas = device?.length ? device : [];
 
+    const workSheet = XLSX.utils.json_to_sheet(datas);
+    const workBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workBook, workSheet, fileName);
+    XLSX.writeFile(workBook, fileName);
   }
 
   const exportPdf = () => {
+    if (!tableRef.current) {
+      alert("PDF로 변환할 테이블을 찾을 수 없습니다.");
+      return;
+    }
+    if (filteredDevices.length === 0) {
+      alert("내보낼 데이터가 없습니다.");
+      return;
+    }
 
+    html2canvas(tableRef.current, { scale: 2, useCORS: true, allowTaint: true }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "p", // p for portrait, l for landscape
+        unit: "mm",
+        format: "a4",
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${DateUtils.formattedNow()}.pdf`);
+    });
   }
 
   useEffect(() => {
@@ -123,8 +165,8 @@ export default function DashBoardMainContent({ device }: BodyProps) {
           <Card className="bg-white shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <Wifi className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <Wifi className="w-6 h-6 text-gray-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">오프라인</p>
@@ -152,6 +194,33 @@ export default function DashBoardMainContent({ device }: BodyProps) {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-gray-900">구역별 기기 현황</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {Object.keys(zoneCounts).length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {Object.entries(zoneCounts).sort().map(([zone, count]) => (
+                  <div key={zone} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 font-medium">{zone}</p>
+                      <p className="text-lg font-bold text-gray-900">{count}대</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>구역 내에 위치한 기기가 없습니다.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Device Management */}
         <Card className="bg-white shadow-sm">
@@ -222,7 +291,7 @@ export default function DashBoardMainContent({ device }: BodyProps) {
             </div>
 
             {/* Table */}
-            <DashBoardTable device={filteredDevices} />
+            <DashBoardTable ref={tableRef} device={filteredDevices} setDevice={setDevice} />
           </CardContent>
         </Card>
       </div>

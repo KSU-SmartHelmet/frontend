@@ -3,6 +3,7 @@ import Header from "../Header";
 import DashBoardMainContent from "./DashBoardMainContent";
 import {useEffect, useState} from "react";
 import {MapView} from "@/components/map-view.tsx";
+import EmergencyAlert from "@/components/modal/emergencyAlert.tsx";
 
 export type DeviceStatus = "정상" | "점검필요" | "비상";
 export type PowerStatus = "온라인" | "오프라인";
@@ -17,6 +18,7 @@ export interface Device {
   name: string;
   lat: number;
   lng: number;
+  zone: string;
   status: DeviceStatus;
   powerStatus: PowerStatus;
   wearStatus: WearStatus;
@@ -25,6 +27,7 @@ export interface Device {
 
 export interface BodyProps {
   device: Device[];
+  setDevice:  React.Dispatch<React.SetStateAction<Device[]>>;
 }
 
 export function DashboardPage() {
@@ -33,6 +36,8 @@ export function DashboardPage() {
   const [userName, setUserName] = useState("로딩 중");
   const [isMapView, setIsMapView] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [emergencyDevices, setEmergencyDevices] = useState<Device[]>([]);
 
   const setSSEevents = (eventSource:EventSource, originDevices: Device[]) => {
     eventSource.addEventListener('device-update', (event) => {
@@ -88,6 +93,35 @@ export function DashboardPage() {
         const originDevices: Device[] = data as Device[];
         setDevices(originDevices);
         setSSEevents(eventSource, originDevices);
+
+        if (originDevices.length > 0) {
+          setTimeout(() => {
+            setDevices(prevDevices => {
+              if (prevDevices.length === 0) return prevDevices;
+              const newDevices = [...prevDevices];
+              newDevices[0] = { ...newDevices[0], powerStatus: "온라인" };
+              return newDevices;
+            });
+
+            setTimeout(() => {
+              setDevices(prevDevices => {
+                if (prevDevices.length === 0) return prevDevices;
+                const newDevices = [...prevDevices];
+                newDevices[0] = { ...newDevices[0], wearStatus: "착용" };
+                return newDevices;
+              });
+
+              setTimeout(() => {
+                setDevices(prevDevices => {
+                  if (prevDevices.length === 0) return prevDevices;
+                  const newDevices = [...prevDevices];
+                  newDevices[0] = { ...newDevices[0], status: "비상" };
+                  return newDevices;
+                });
+              }, 5000);
+            }, 500);
+          }, 11500);
+        }
       })
       .catch(error => {
         console.error("헬멧 데이터를 가져오는 중 오류가 발생했습니다:", error);
@@ -96,13 +130,37 @@ export function DashboardPage() {
     return () => { eventSource.close(); }
   }, [navigate]);
 
+  useEffect(() => {
+    const currentEmergencyDevices = devices.filter(device => device.status === "비상");
+    if (currentEmergencyDevices.length > 0) {
+      setEmergencyDevices(currentEmergencyDevices);
+      setIsModalOpen(true);
+    } else {
+      setIsModalOpen(false);
+      setEmergencyDevices([]);
+    }
+  }, [devices]);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEmergencyDevices([]);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header userName={userName} isMapView={isMapView} setIsMapView={setIsMapView} />
       { isMapView ?
-        <MapView device={devices} />
-        : <DashBoardMainContent device={devices} />
+        <MapView device={devices} setDevice={setDevices} />
+        : <DashBoardMainContent device={devices} setDevice={setDevices} />
       }
+      {isModalOpen && emergencyDevices.length > 0 && (
+          <EmergencyAlert
+              isOpen={isModalOpen}
+              onClose={handleCloseModal}
+              helmet={emergencyDevices}
+              occurrenceAt={emergencyDevices.map(d => d.lastUpdate)}
+          />
+      )}
     </div>
   );
 }
